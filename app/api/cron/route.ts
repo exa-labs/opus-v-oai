@@ -144,9 +144,9 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `You classify tech content about Claude Opus 4.6 / Anthropic vs OpenAI Codex 5.3:
-- "claude": Favors Claude Opus 4.6, Anthropic, Claude Code.
-- "openai": Favors OpenAI Codex 5.3, GPT, ChatGPT.
+            content: `You classify tech content about Claude / Anthropic vs OpenAI:
+- "claude": Favors Claude, Anthropic, Claude Code.
+- "openai": Favors OpenAI, GPT, Codex, ChatGPT.
 - "neutral": Stating facts without taking sides, comparing both equally.
 Return valid JSON.`,
           },
@@ -200,7 +200,7 @@ Return valid JSON.`,
           },
           {
             role: "user",
-            content: `We've analyzed ${allTweets.length} tweets about Claude Opus 4.6 / Anthropic (${claudeTweets.length} mentions) and OpenAI Codex 5.3 (${openaiTweets.length} mentions) from the past 24 hours.\n\nHere are the top ${Math.min(300, allTweets.length)} tweets by importance:\n\n${tweetList}\n\nWrite a 2-3 sentence summary of the OVERALL impression from the engineering community right now. What's the vibe? Who's winning hearts and minds? What are the key tensions or surprises?\n\nBe specific — reference actual trends, tools, or sentiments you see in the data. Don't be generic.\nReturn JSON: {"summary": "your 2-3 sentence summary here"}`,
+            content: `We've analyzed ${allTweets.length} tweets about Claude / Anthropic (${claudeTweets.length} mentions) and OpenAI (${openaiTweets.length} mentions) from the past 24 hours.\n\nHere are the top ${Math.min(300, allTweets.length)} tweets by importance:\n\n${tweetList}\n\nWrite a 2-3 sentence summary of the OVERALL impression from the engineering community right now. What's the vibe? Who's winning hearts and minds? What are the key tensions or surprises?\n\nBe specific — reference actual trends, tools, or sentiments you see in the data. Don't be generic.\nReturn JSON: {"summary": "your 2-3 sentence summary here"}`,
           },
         ],
         temperature: 0.3,

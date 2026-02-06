@@ -52,7 +52,7 @@ Snippet: ${p.snippet?.slice(0, 200) || ""}`
     )
     .join("\n\n");
 
-  const prompt = `You are analyzing ${posts.length} posts about Claude/Anthropic (especially Opus 4.6) vs OpenAI (especially Codex) from the last 24 hours.
+  const prompt = `You are analyzing ${posts.length} posts about Claude/Anthropic vs OpenAI from the last 24 hours.
 
 Stats: ${claudePosts.length} about Claude, ${openaiPosts.length} about OpenAI. ${positivePosts.length} positive, ${negativePosts.length} negative.
 
@@ -62,7 +62,7 @@ ${postsContext}
 
 Return a JSON object with EXACTLY this structure:
 {
-  "headline": "A punchy 5-10 word editorial headline that captures the main narrative. Think Bloomberg meets tech Twitter. Examples: 'Engineers Split on Opus 4.6 vs Codex', 'Opus 4.6 Has Devs Switching Back to Claude'",
+  "headline": "A punchy 5-10 word editorial headline that captures the main narrative. Think Bloomberg meets tech Twitter. Examples: 'Engineers Split on Claude vs OpenAI', 'Claude Has Devs Switching From ChatGPT'",
   "subtext": "One sentence, max 25 words — the key takeaway an engineer would want to know",
   "claude_vibe": "3-5 word summary of how people feel about Claude right now (e.g. 'Devs are impressed', 'Hype but unproven', 'Best coding model yet')",
   "openai_vibe": "3-5 word summary of how people feel about OpenAI right now (e.g. 'Codex underwhelms so far', 'Playing catch-up', 'Strong but pricey')",
@@ -103,7 +103,7 @@ Return a JSON object with EXACTLY this structure:
 CRITICAL RULES:
 - The takes MUST be drawn from actual post content — reference real titles, real opinions, real benchmarks mentioned in the posts.
 - Don't make up generic takes like "AI is advancing fast". Pull SPECIFIC reactions: model names, feature names, comparison results.
-- The vibe labels should be what you'd tell a friend if they asked "so what do people think about Opus 4.6?"
+- The vibe labels should be what you'd tell a friend if they asked "so what do people think about Claude vs OpenAI?"
 - Aim for 5-6 takes covering a MIX of Claude takes, OpenAI takes, and comparison takes.
 - Include both positive AND negative takes for both sides.
 Return ONLY valid JSON, nothing else.`;

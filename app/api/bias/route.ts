@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content: `You classify tech content about Claude/Anthropic vs OpenAI into three categories:
-- "claude": Favors Claude Opus 4.6, Anthropic, Claude Code. Praises Claude's performance, features, or team. Says Claude is better.
-- "openai": Favors OpenAI Codex 5.3, GPT, ChatGPT. Praises OpenAI's performance, features, or team. Says OpenAI is better.
+- "claude": Favors Claude, Anthropic, Claude Code. Praises Claude's performance, features, or team. Says Claude is better.
+- "openai": Favors OpenAI, GPT, Codex, ChatGPT. Praises OpenAI's performance, features, or team. Says OpenAI is better.
 - "neutral": Stating facts without taking sides, comparing both equally, or discussing the broader landscape.
 
 Be precise. If content mentions BOTH but clearly favors one side, classify it as that side.

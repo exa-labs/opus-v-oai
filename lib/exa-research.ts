@@ -105,7 +105,7 @@ function isJunkUrl(url: string): boolean {
 }
 
 /**
- * Discover 1000+ sources about Opus 4.6 and OpenAI Codex.
+ * Discover 1000+ sources about Claude/Anthropic vs OpenAI.
  * Heavy Twitter focus, plus Reddit, HN, and quality news/blogs.
  * Returns raw citations — filtering happens downstream via LLM.
  */
@@ -122,31 +122,31 @@ export async function discoverPosts(): Promise<{
   const today = getTodayStart();
 
   // ── MASSIVE tweet discovery ──
-  // Goal: 800+ tweets about Opus 4.6 and Codex
+  // Goal: 800+ tweets about Claude and OpenAI
   const tweetSearches: SearchQuery[] = [
-    // Claude / Opus 4.6 tweets — many angles
-    { query: "Claude Opus 4.6", numResults: 30, category: "tweet", startPublishedDate: yesterday },
-    { query: "Opus 4.6 release impressions", numResults: 30, category: "tweet", startPublishedDate: yesterday },
-    { query: "Opus 4.6 coding benchmark performance", numResults: 25, category: "tweet", startPublishedDate: yesterday },
-    { query: "Claude Opus 4.6 vs GPT", numResults: 25, category: "tweet", startPublishedDate: yesterday },
+    // Claude / Anthropic tweets — many angles
+    { query: "Claude Opus model", numResults: 30, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude Sonnet impressions", numResults: 30, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude coding benchmark performance", numResults: 25, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude vs GPT comparison", numResults: 25, category: "tweet", startPublishedDate: yesterday },
     { query: "Claude Code agentic", numResults: 25, category: "tweet", startPublishedDate: yesterday },
     { query: "Anthropic Claude new model today", numResults: 25, category: "tweet", startPublishedDate: yesterday },
-    { query: "Opus 4.6 best model ever", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Opus 4.6 disappointing mid", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Claude Opus upgrade experience developer", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Anthropic Opus 4.6 benchmark SWE-bench", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Claude 4.6 coding agent terminal", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Claude Opus reasoning thinking model", numResults: 15, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude best model ever", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude disappointing mid overrated", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude upgrade experience developer", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Anthropic Claude benchmark SWE-bench", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude coding agent terminal", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude reasoning thinking model", numResults: 15, category: "tweet", startPublishedDate: yesterday },
     { query: "Anthropic Claude beats OpenAI", numResults: 15, category: "tweet", startPublishedDate: yesterday },
     { query: "Claude Code review first impressions engineer", numResults: 15, category: "tweet", startPublishedDate: yesterday },
 
-    // OpenAI / Codex tweets — many angles
+    // OpenAI / Codex / GPT tweets — many angles
     { query: "OpenAI Codex release agent", numResults: 30, category: "tweet", startPublishedDate: yesterday },
     { query: "Codex coding agent cloud", numResults: 25, category: "tweet", startPublishedDate: yesterday },
     { query: "OpenAI Codex impressions review", numResults: 25, category: "tweet", startPublishedDate: yesterday },
     { query: "Codex vs Claude Code comparison", numResults: 25, category: "tweet", startPublishedDate: yesterday },
     { query: "OpenAI Codex benchmark performance", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "GPT-4.1 o3 o4-mini model", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "GPT o3 o4-mini model", numResults: 20, category: "tweet", startPublishedDate: yesterday },
     { query: "OpenAI Codex disappointing underwhelming", numResults: 20, category: "tweet", startPublishedDate: yesterday },
     { query: "OpenAI Codex amazing impressive", numResults: 20, category: "tweet", startPublishedDate: yesterday },
     { query: "Codex agent sandbox environment coding", numResults: 15, category: "tweet", startPublishedDate: yesterday },
@@ -154,14 +154,14 @@ export async function discoverPosts(): Promise<{
     { query: "Sam Altman Codex announcement", numResults: 15, category: "tweet", startPublishedDate: yesterday },
 
     // Head-to-head / comparison tweets
-    { query: "Opus 4.6 vs Codex which is better", numResults: 25, category: "tweet", startPublishedDate: yesterday },
-    { query: "Claude vs ChatGPT coding 2025", numResults: 20, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude vs Codex which is better", numResults: 25, category: "tweet", startPublishedDate: yesterday },
+    { query: "Claude vs ChatGPT coding", numResults: 20, category: "tweet", startPublishedDate: yesterday },
     { query: "Claude Code vs Cursor vs Copilot", numResults: 20, category: "tweet", startPublishedDate: yesterday },
-    { query: "Anthropic vs OpenAI battle war AI", numResults: 15, category: "tweet", startPublishedDate: yesterday },
+    { query: "Anthropic vs OpenAI AI models", numResults: 15, category: "tweet", startPublishedDate: yesterday },
     { query: "best AI coding model right now", numResults: 15, category: "tweet", startPublishedDate: yesterday },
 
     // Twitter domain backup (catches what category=tweet misses)
-    { query: "Opus 4.6 Claude", numResults: 20, includeDomains: twitterDomains, startPublishedDate: yesterday },
+    { query: "Claude Opus Anthropic", numResults: 20, includeDomains: twitterDomains, startPublishedDate: yesterday },
     { query: "Codex OpenAI agent", numResults: 20, includeDomains: twitterDomains, startPublishedDate: yesterday },
     { query: "Claude Code developer", numResults: 15, includeDomains: twitterDomains, startPublishedDate: yesterday },
     { query: "AI coding model comparison today", numResults: 15, includeDomains: twitterDomains, startPublishedDate: yesterday },
@@ -169,7 +169,7 @@ export async function discoverPosts(): Promise<{
 
   // ── Reddit discussion threads ──
   const redditSearches: SearchQuery[] = [
-    { query: "Claude Opus 4.6 review impressions", numResults: 20, includeDomains: redditDomains, startPublishedDate: yesterday },
+    { query: "Claude Opus review impressions", numResults: 20, includeDomains: redditDomains, startPublishedDate: yesterday },
     { query: "OpenAI Codex review impressions agent", numResults: 20, includeDomains: redditDomains, startPublishedDate: yesterday },
     { query: "Claude Code vs Cursor vs Copilot", numResults: 15, includeDomains: redditDomains, startPublishedDate: yesterday },
     { query: "Codex vs Claude Code comparison", numResults: 15, includeDomains: redditDomains, startPublishedDate: yesterday },
@@ -179,16 +179,16 @@ export async function discoverPosts(): Promise<{
 
   // ── Hacker News ──
   const hnSearches: SearchQuery[] = [
-    { query: "Claude Opus 4.6 Anthropic", numResults: 15, includeDomains: hnDomains, startPublishedDate: yesterday },
+    { query: "Claude Opus Anthropic", numResults: 15, includeDomains: hnDomains, startPublishedDate: yesterday },
     { query: "OpenAI Codex agent coding", numResults: 15, includeDomains: hnDomains, startPublishedDate: yesterday },
   ];
 
   // ── Quality web articles ──
   const webSearches: SearchQuery[] = [
-    { query: "Claude Opus 4.6 release review technical analysis", numResults: 15, startPublishedDate: yesterday },
+    { query: "Claude Opus release review technical analysis", numResults: 15, startPublishedDate: yesterday },
     { query: "OpenAI Codex launch review hands-on developer", numResults: 15, startPublishedDate: yesterday },
     { query: "Anthropic Claude Code developer tools launch", numResults: 10, startPublishedDate: yesterday },
-    { query: "Opus 4.6 vs Codex comparison benchmark analysis", numResults: 10, startPublishedDate: yesterday },
+    { query: "Claude vs OpenAI comparison benchmark analysis", numResults: 10, startPublishedDate: yesterday },
   ];
 
   // Run all in parallel batches
