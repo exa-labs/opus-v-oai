@@ -1,0 +1,41 @@
+{
+  "name": "opus-v-oai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "trigger-cron": "npx tsx scripts/trigger-cron.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.73.0",
+    "better-sqlite3": "^11.7.0",
+    "chart.js": "^4.4.7",
+    "exa-js": "^1.4.9",
+    "lucide-react": "^0.468.0",
+    "next": "15.1.6",
+    "openai": "^4.77.0",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^9.0.3",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.0.2",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.1.6",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

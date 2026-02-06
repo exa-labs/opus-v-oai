@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --color-exa-black: #e4e4e7;
+  --color-exa-dark: #d4d4d8;
+  --color-exa-gray-50: #111116;
+  --color-exa-gray-100: #18181e;
+  --color-exa-gray-200: #1e1e26;
+  --color-exa-gray-300: #2a2a35;
+  --color-exa-gray-400: #3f3f4a;
+  --color-exa-gray-500: #71717a;
+  --color-exa-gray-600: #a1a1aa;
+  --color-exa-gray-700: #d4d4d8;
+  --color-exa-gray-800: #e4e4e7;
+  --color-exa-gray-900: #fafafa;
+  --color-exa-blue-light: #638dff;
+  --color-exa-blue: #5b8aff;
+  --color-exa-blue-dark: #001651;
+
+  --font-family-diatype: "ABC Diatype", system-ui, sans-serif;
+  --font-family-arizona: "ABC Arizona Flare", Georgia, serif;
+
+  --shadow-card: 0px 2px 8px 0px rgba(0,0,0,0.3), 0px 4px 16px 0px rgba(0,0,0,0.2);
+  --shadow-button-sm: 0px 1px 3px 0px rgba(0,0,0,0.3), 0px 1px 2px 0px rgba(0,0,0,0.2);
+}
+
+@font-face {
+  font-family: "ABC Diatype";
+  src: url("/fonts/ABC Diatype/ABCDiatypePlusVariable-Trial.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ABC Arizona Flare";
+  src: url("/fonts/ArizonaFlare/ABCArizonaFlare-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ABC Arizona Flare";
+  src: url("/fonts/ArizonaFlare/ABCArizonaFlare-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #e4e4e7;
+}
+
+body {
+  font-family: "ABC Diatype", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+/* Scrollbar styling for dark mode */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #141419;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a35;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a45;
+}
+
+.gradient-arrow-btn {
+  background: linear-gradient(to bottom, #001651 8.654%, #0040f0);
+}
