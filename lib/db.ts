@@ -1,22 +1,34 @@
-import Database from "better-sqlite3";
 import path from "path";
 import type { Post, CronRun, Metric, Subject, FeedFilter, Trend } from "./types";
 
+let Database: typeof import("better-sqlite3").default | null = null;
+try {
+  Database = require("better-sqlite3");
+} catch {
+  // better-sqlite3 not available (e.g. Vercel serverless)
+}
+
 const DB_PATH = path.join(process.cwd(), "data", "sentiment.db");
 
-let _db: Database.Database | null = null;
+let _db: import("better-sqlite3").Database | null = null;
 
-function getDb(): Database.Database {
+function getDb(): import("better-sqlite3").Database | null {
+  if (!Database) return null;
   if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
-    _db.pragma("foreign_keys = ON");
-    initSchema(_db);
+    try {
+      _db = new Database(DB_PATH);
+      _db.pragma("journal_mode = WAL");
+      _db.pragma("foreign_keys = ON");
+      initSchema(_db);
+    } catch {
+      Database = null;
+      return null;
+    }
   }
   return _db;
 }
 
-function initSchema(db: Database.Database) {
+function initSchema(db: import("better-sqlite3").Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
@@ -108,6 +120,7 @@ function initSchema(db: Database.Database) {
 
 export function createCronRun(id: string): CronRun {
   const db = getDb();
+  if (!db) return { id, started_at: new Date().toISOString(), completed_at: null, posts_found: 0, posts_new: 0, summary: null, claude_score: null, openai_score: null, status: "running" };
   const now = new Date().toISOString();
   db.prepare(
     `INSERT INTO cron_runs (id, started_at, status) VALUES (?, ?, 'running')`
@@ -126,6 +139,7 @@ export function completeCronRun(
   }
 ) {
   const db = getDb();
+  if (!db) return;
   db.prepare(
     `UPDATE cron_runs SET completed_at = ?, posts_found = ?, posts_new = ?, summary = ?, claude_score = ?, openai_score = ?, status = 'completed' WHERE id = ?`
   ).run(
@@ -141,6 +155,7 @@ export function completeCronRun(
 
 export function failCronRun(id: string) {
   const db = getDb();
+  if (!db) return;
   db.prepare(
     `UPDATE cron_runs SET completed_at = ?, status = 'failed' WHERE id = ?`
   ).run(new Date().toISOString(), id);
@@ -148,6 +163,7 @@ export function failCronRun(id: string) {
 
 export function getLatestCompletedRun(): CronRun | null {
   const db = getDb();
+  if (!db) return null;
   return db.prepare(
     `SELECT * FROM cron_runs WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 1`
   ).get() as CronRun | null;
@@ -155,6 +171,7 @@ export function getLatestCompletedRun(): CronRun | null {
 
 export function getLatestRun(): CronRun | null {
   const db = getDb();
+  if (!db) return null;
   return db.prepare(
     `SELECT * FROM cron_runs ORDER BY started_at DESC LIMIT 1`
   ).get() as CronRun | null;
@@ -164,6 +181,7 @@ export function getLatestRun(): CronRun | null {
 
 export function insertPost(post: Omit<Post, "sentiment" | "sentiment_score" | "importance_score"> & { sentiment?: string; sentiment_score?: number }): boolean {
   const db = getDb();
+  if (!db) return false;
   try {
     db.prepare(
       `INSERT OR IGNORE INTO posts (id, url, title, snippet, source_type, subject, sentiment, sentiment_score, published_at, discovered_at, cron_run_id, author)
@@ -190,6 +208,7 @@ export function insertPost(post: Omit<Post, "sentiment" | "sentiment_score" | "i
 
 export function updatePostSentiment(id: string, sentiment: string, score: number) {
   const db = getDb();
+  if (!db) return;
   db.prepare(
     `UPDATE posts SET sentiment = ?, sentiment_score = ? WHERE id = ?`
   ).run(sentiment, score, id);
@@ -197,6 +216,7 @@ export function updatePostSentiment(id: string, sentiment: string, score: number
 
 export function getPostsByRunId(runId: string): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE cron_run_id = ? ORDER BY discovered_at DESC`
   ).all(runId) as Post[];
@@ -209,6 +229,7 @@ export function getFeedPosts(
   since?: string
 ): Post[] {
   const db = getDb();
+  if (!db) return [];
   let query = `SELECT * FROM posts`;
   const conditions: string[] = [];
   const params: (string | number)[] = [];
@@ -244,6 +265,7 @@ export function getFeedPosts(
 
 export function getTotalPosts(filter: FeedFilter = "all"): number {
   const db = getDb();
+  if (!db) return 0;
   let query = `SELECT COUNT(*) as count FROM posts`;
 
   if (filter === "claude") {
@@ -262,6 +284,7 @@ export function getTotalPosts(filter: FeedFilter = "all"): number {
 
 export function computeAndStoreMetrics(subject: Subject): Metric {
   const db = getDb();
+  if (!db) return { id: 0, subject, computed_at: new Date().toISOString(), total_posts: 0, positive_count: 0, negative_count: 0, neutral_count: 0, sentiment_score: 0, trend: "stable" };
 
   const stats = db.prepare(`
     SELECT
@@ -322,6 +345,7 @@ export function computeAndStoreMetrics(subject: Subject): Metric {
 
 export function getLatestMetrics(subject: Subject): Metric | null {
   const db = getDb();
+  if (!db) return null;
   return db.prepare(
     `SELECT * FROM metrics WHERE subject = ? ORDER BY computed_at DESC LIMIT 1`
   ).get(subject) as Metric | null;
@@ -329,6 +353,7 @@ export function getLatestMetrics(subject: Subject): Metric | null {
 
 export function getNewPostsCount(runId: string): number {
   const db = getDb();
+  if (!db) return 0;
   const result = db.prepare(
     `SELECT COUNT(*) as count FROM posts WHERE cron_run_id = ?`
   ).get(runId) as { count: number };
@@ -337,6 +362,7 @@ export function getNewPostsCount(runId: string): number {
 
 export function getRecentTweets(limit: number = 25): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE source_type = 'twitter' AND snippet IS NOT NULL AND snippet != ''
      AND (views >= 5000 OR likes >= 200)
@@ -347,6 +373,7 @@ export function getRecentTweets(limit: number = 25): Post[] {
 
 export function getUnscoredTweets(limit: number = 200): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE source_type = 'twitter' AND snippet IS NOT NULL AND snippet != '' AND (importance_score IS NULL OR importance_score = 0) ORDER BY discovered_at DESC LIMIT ?`
   ).all(limit) as Post[];
@@ -354,11 +381,13 @@ export function getUnscoredTweets(limit: number = 200): Post[] {
 
 export function updateImportanceScore(id: string, score: number) {
   const db = getDb();
+  if (!db) return;
   db.prepare(`UPDATE posts SET importance_score = ? WHERE id = ?`).run(score, id);
 }
 
 export function getTweetsWithoutTakes(limit: number = 500): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE source_type = 'twitter' AND snippet IS NOT NULL AND snippet != '' AND importance_score >= 6 AND take IS NULL AND (views IS NULL OR views >= 5000) ORDER BY importance_score DESC LIMIT ?`
   ).all(limit) as Post[];
@@ -366,11 +395,13 @@ export function getTweetsWithoutTakes(limit: number = 500): Post[] {
 
 export function updatePostTake(id: string, take: string) {
   const db = getDb();
+  if (!db) return;
   db.prepare(`UPDATE posts SET take = ? WHERE id = ?`).run(take, id);
 }
 
 export function getTopTweetsWithTakes(limit: number = 200): (Post & { take: string })[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE source_type = 'twitter' AND take IS NOT NULL AND (views >= 5000 OR likes >= 200) ORDER BY likes DESC, importance_score DESC LIMIT ?`
   ).all(limit) as (Post & { take: string })[];
@@ -378,6 +409,7 @@ export function getTopTweetsWithTakes(limit: number = 200): (Post & { take: stri
 
 export function getAllTweetsForSummary(): { author: string; snippet: string; subject: string }[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT author, snippet, subject FROM posts WHERE source_type = 'twitter' AND snippet IS NOT NULL AND snippet != '' ORDER BY importance_score DESC, discovered_at DESC`
   ).all() as { author: string; snippet: string; subject: string }[];
@@ -385,6 +417,7 @@ export function getAllTweetsForSummary(): { author: string; snippet: string; sub
 
 export function getTotalSourcesAnalyzed(): number {
   const db = getDb();
+  if (!db) return 0;
   const result = db.prepare(
     `SELECT COUNT(*) as total FROM posts`
   ).get() as { total: number };
@@ -395,12 +428,13 @@ export function getTotalSourcesAnalyzed(): number {
 
 export function updatePostImageUrl(id: string, imageUrl: string) {
   const db = getDb();
+  if (!db) return;
   db.prepare(`UPDATE posts SET image_url = ? WHERE id = ?`).run(imageUrl, id);
 }
 
 export function getImageUrlsForUrls(urls: string[]): Map<string, string> {
   const db = getDb();
-  if (urls.length === 0) return new Map();
+  if (!db || urls.length === 0) return new Map();
   const placeholders = urls.map(() => "?").join(",");
   const rows = db.prepare(
     `SELECT url, image_url FROM posts WHERE url IN (${placeholders}) AND image_url IS NOT NULL AND image_url != ''`
@@ -414,6 +448,7 @@ export function getImageUrlsForUrls(urls: string[]): Map<string, string> {
 
 export function getHeadToHeadTweets(limit: number = 12): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts
      WHERE source_type = 'twitter'
@@ -439,6 +474,7 @@ export function getHeadToHeadTweets(limit: number = 12): Post[] {
 
 export function getUseCaseTweets(subject: 'claude' | 'openai', limit: number = 8): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts
      WHERE source_type = 'twitter'
@@ -475,6 +511,7 @@ export function getUseCaseTweets(subject: 'claude' | 'openai', limit: number = 8
 
 export function getTweetsWithoutEngagement(limit: number = 500): Post[] {
   const db = getDb();
+  if (!db) return [];
   return db.prepare(
     `SELECT * FROM posts WHERE source_type = 'twitter' AND engagement_fetched_at IS NULL ORDER BY discovered_at DESC LIMIT ?`
   ).all(limit) as Post[];
@@ -485,6 +522,7 @@ export function updatePostEngagement(
   engagement: { likes: number; retweets: number; replies: number; views: number; quotes: number; bookmarks: number }
 ) {
   const db = getDb();
+  if (!db) return;
   db.prepare(
     `UPDATE posts SET likes = ?, retweets = ?, replies = ?, views = ?, quotes = ?, bookmarks = ?, engagement_fetched_at = ? WHERE id = ?`
   ).run(
@@ -496,6 +534,7 @@ export function updatePostEngagement(
 
 export function markEngagementFailed(id: string) {
   const db = getDb();
+  if (!db) return;
   db.prepare(
     `UPDATE posts SET engagement_fetched_at = ? WHERE id = ?`
   ).run(new Date().toISOString(), id);
