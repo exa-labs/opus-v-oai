@@ -6,7 +6,7 @@ import type { MonitorResponse } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const lastRun = getLatestCompletedRun();
+  const lastRun = await getLatestCompletedRun();
 
   const response: MonitorResponse = {
     lastRunAt: lastRun?.completed_at || null,

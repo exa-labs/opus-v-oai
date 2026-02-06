@@ -5,9 +5,9 @@ import type { MetricsResponse } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const claude = getLatestMetrics("claude");
-  const openai = getLatestMetrics("openai");
-  const lastRun = getLatestCompletedRun();
+  const claude = await getLatestMetrics("claude");
+  const openai = await getLatestMetrics("openai");
+  const lastRun = await getLatestCompletedRun();
 
   const response: MetricsResponse = {
     claude,

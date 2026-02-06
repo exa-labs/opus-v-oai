@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
   const offset = parseInt(searchParams.get("offset") || "0", 10);
   const since = searchParams.get("since") || undefined;
 
-  const posts = getFeedPosts(filter, limit, offset, since);
-  const total = getTotalPosts(filter);
+  const posts = await getFeedPosts(filter, limit, offset, since);
+  const total = await getTotalPosts(filter);
 
   const response: FeedResponse = {
     posts,

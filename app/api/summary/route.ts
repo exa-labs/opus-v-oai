@@ -12,7 +12,7 @@ function getOpenAI(): OpenAI {
 
 export async function GET() {
   try {
-    const tweets = getAllTweetsForSummary();
+    const tweets = await getAllTweetsForSummary();
 
     if (tweets.length === 0) {
       return NextResponse.json({ summary: null });
