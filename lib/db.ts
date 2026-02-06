@@ -15,10 +15,15 @@ let _db: import("better-sqlite3").Database | null = null;
 function getDb(): import("better-sqlite3").Database | null {
   if (!Database) return null;
   if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
-    _db.pragma("foreign_keys = ON");
-    initSchema(_db);
+    try {
+      _db = new Database(DB_PATH);
+      _db.pragma("journal_mode = WAL");
+      _db.pragma("foreign_keys = ON");
+      initSchema(_db);
+    } catch {
+      Database = null;
+      return null;
+    }
   }
   return _db;
 }
