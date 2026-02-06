@@ -1,11 +1,11 @@
 /**
  * Backfill engagement for tweets missing it + refresh tweets older than 1 hour.
  * Efficient: only fetches what's needed.
+ * Usage: npx tsx scripts/backfill-engagement-new.ts
  */
-import Database from "better-sqlite3";
-import path from "path";
+import { neon } from "@neondatabase/serverless";
 
-const DB_PATH = path.join(import.meta.dirname, "..", "data", "sentiment.db");
+const sql = neon(process.env.DATABASE_URL!);
 const API_KEY = process.env.TWITTER_API_KEY;
 
 if (!API_KEY) { console.error("Set TWITTER_API_KEY"); process.exit(1); }
@@ -19,20 +19,14 @@ function extractTweetId(url: string): string | null {
 }
 
 async function main() {
-  const db = new Database(DB_PATH);
-
-  // Get tweets that either have no engagement OR were fetched > 1 hour ago (refresh)
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const tweets = db.prepare(
-    `SELECT id, url FROM posts WHERE source_type = 'twitter'
-     AND (engagement_fetched_at IS NULL OR (engagement_fetched_at < ? AND likes IS NULL))`
-  ).all(oneHourAgo) as { id: string; url: string }[];
+  const tweets = await sql`SELECT id, url FROM posts WHERE source_type = 'twitter'
+     AND (engagement_fetched_at IS NULL OR (engagement_fetched_at < ${oneHourAgo} AND likes IS NULL))` as { id: string; url: string }[];
 
   console.log(`[Backfill] ${tweets.length} tweets need engagement (missing or stale)`);
 
   if (tweets.length === 0) {
     console.log("[Backfill] Nothing to do!");
-    db.close();
     return;
   }
 
@@ -45,17 +39,12 @@ async function main() {
     if (tweetId) {
       fetchable.push({ id: t.id, tweetId });
     } else {
-      db.prepare(`UPDATE posts SET engagement_fetched_at = ? WHERE id = ?`).run(now, t.id);
+      await sql`UPDATE posts SET engagement_fetched_at = ${now} WHERE id = ${t.id}`;
       skipped++;
     }
   }
 
   console.log(`[Backfill] ${fetchable.length} fetchable, ${skipped} skipped`);
-
-  const updateStmt = db.prepare(
-    `UPDATE posts SET likes = ?, retweets = ?, replies = ?, views = ?, quotes = ?, bookmarks = ?, engagement_fetched_at = ? WHERE id = ?`
-  );
-  const failStmt = db.prepare(`UPDATE posts SET engagement_fetched_at = ? WHERE id = ?`);
 
   let fetched = 0;
   let failed = 0;
@@ -70,48 +59,44 @@ async function main() {
       const ids = batch.map(b => b.tweetId).join(",");
       const resp = await fetch(
         `https://api.twitterapi.io/twitter/tweets?tweet_ids=${ids}`,
-        { headers: { "X-API-Key": API_KEY, "Content-Type": "application/json" } }
+        { headers: { "X-API-Key": API_KEY!, "Content-Type": "application/json" } }
       );
       if (!resp.ok) throw new Error(`API: ${resp.status} ${await resp.text()}`);
       const data = await resp.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tweetMap = new Map<string, any>();
       for (const t of data.tweets || []) tweetMap.set(t.id, t);
 
       for (const { id, tweetId } of batch) {
         const t = tweetMap.get(tweetId);
         if (t) {
-          updateStmt.run(t.likeCount || 0, t.retweetCount || 0, t.replyCount || 0, t.viewCount || 0, t.quoteCount || 0, t.bookmarkCount || 0, now, id);
+          await sql`UPDATE posts SET likes = ${t.likeCount || 0}, retweets = ${t.retweetCount || 0}, replies = ${t.replyCount || 0}, views = ${t.viewCount || 0}, quotes = ${t.quoteCount || 0}, bookmarks = ${t.bookmarkCount || 0}, engagement_fetched_at = ${now} WHERE id = ${id}`;
           fetched++;
         } else {
-          failStmt.run(now, id);
+          await sql`UPDATE posts SET engagement_fetched_at = ${now} WHERE id = ${id}`;
           skipped++;
         }
       }
       console.log(`[Backfill] Batch ${batchNum}: ${tweetMap.size} found`);
     } catch (err) {
       console.error(`[Backfill] Batch ${batchNum} failed:`, err);
-      for (const { id } of batch) failStmt.run(now, id);
+      for (const { id } of batch) await sql`UPDATE posts SET engagement_fetched_at = ${now} WHERE id = ${id}`;
       failed += batch.length;
     }
   }
 
   // Stats
-  const over5k = (db.prepare(`SELECT COUNT(*) as c FROM posts WHERE source_type = 'twitter' AND views >= 5000`).get() as { c: number }).c;
-  const withEng = (db.prepare(`SELECT COUNT(*) as c FROM posts WHERE engagement_fetched_at IS NOT NULL`).get() as { c: number }).c;
-
-  const topNew = db.prepare(
-    `SELECT author, likes, retweets, views FROM posts WHERE source_type = 'twitter' AND likes IS NOT NULL ORDER BY likes DESC LIMIT 15`
-  ).all() as { author: string; likes: number; retweets: number; views: number }[];
+  const [over5k] = await sql`SELECT COUNT(*) as c FROM posts WHERE source_type = 'twitter' AND views >= 5000` as { c: number }[];
+  const [withEng] = await sql`SELECT COUNT(*) as c FROM posts WHERE engagement_fetched_at IS NOT NULL` as { c: number }[];
+  const topNew = await sql`SELECT author, likes, retweets, views FROM posts WHERE source_type = 'twitter' AND likes IS NOT NULL ORDER BY likes DESC LIMIT 15` as { author: string; likes: number; retweets: number; views: number }[];
 
   console.log(`\n[Backfill] Done. Fetched: ${fetched}, Skipped: ${skipped}, Failed: ${failed}`);
-  console.log(`Tweets with 5k+ views: ${over5k}`);
-  console.log(`Posts with engagement: ${withEng}`);
+  console.log(`Tweets with 5k+ views: ${over5k.c}`);
+  console.log(`Posts with engagement: ${withEng.c}`);
   console.log(`\nTop 15 by likes:`);
   for (const t of topNew) {
     console.log(`  @${(t.author || "?").replace(/^@/, "")}: ${t.likes} likes, ${t.retweets} RTs, ${t.views} views`);
   }
-
-  db.close();
 }
 
 main().catch(console.error);
