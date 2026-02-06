@@ -46,3 +46,12 @@ data/*.db-shm
 
 # SKILL.md
 SKILL.md
+
+# Python leftovers
+__pycache__
+*.pyc
+.venv
+venv
+
+# env
+.env

@@ -1,7 +1,21 @@
 import { neon } from "@neondatabase/serverless";
 import type { Post, CronRun, Metric, Subject, FeedFilter, Trend } from "./types";
 
-const sql = neon(process.env.DATABASE_URL!);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _sql: any = null;
+
+function sql(strings: TemplateStringsArray, ...values: unknown[]) {
+  if (!_sql) {
+    const url = process.env.DATABASE_URL;
+    if (!url) {
+      throw new Error(
+        "DATABASE_URL is not set. Add a Neon Postgres connection string to .env"
+      );
+    }
+    _sql = neon(url);
+  }
+  return _sql(strings, ...values);
+}
 
 let _initialized = false;
 
@@ -111,7 +125,7 @@ export async function getLatestRun(): Promise<CronRun | null> {
 
 // ─── Posts ───
 
-export async function insertPost(post: Omit<Post, "sentiment" | "sentiment_score" | "importance_score"> & { sentiment?: string; sentiment_score?: number }): Promise<boolean> {
+export async function insertPost(post: Pick<Post, "id" | "url" | "title" | "snippet" | "source_type" | "subject" | "discovered_at" | "cron_run_id" | "published_at" | "author"> & { sentiment?: string; sentiment_score?: number }): Promise<boolean> {
   await ensureSchema();
   try {
     await sql`INSERT INTO posts (id, url, title, snippet, source_type, subject, sentiment, sentiment_score, published_at, discovered_at, cron_run_id, author)
