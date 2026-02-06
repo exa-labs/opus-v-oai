@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   console.log(`[Cron] Starting run ${runId}`);
 
   try {
-    createCronRun(runId);
+    await createCronRun(runId);
 
     // 1. Discover sources via Exa
     const { allCitations, totalSearched } = await discoverPosts();
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       const sourceType = classifySourceType(citation.url);
       const subject = classifySubject(title, snippet || "");
 
-      const inserted = insertPost({
+      const inserted = await insertPost({
         id: urlHash,
         url: citation.url,
         title,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       if (inserted) {
         newCount++;
         if (citation.image) {
-          updatePostImageUrl(urlHash, citation.image);
+          await updatePostImageUrl(urlHash, citation.image);
         }
       }
     }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     console.log(`[Cron] ${newCount} new posts stored (${allCitations.length - newCount} already existed)`);
 
     // 2.5. Fetch engagement metrics from TwitterAPI.io (before scoring)
-    const tweetsNeedingEngagement = getTweetsWithoutEngagement(500);
+    const tweetsNeedingEngagement = await getTweetsWithoutEngagement(500);
     if (tweetsNeedingEngagement.length > 0) {
       console.log(`[Cron] Fetching engagement for ${tweetsNeedingEngagement.length} tweets...`);
       const engResult = await fetchEngagement(tweetsNeedingEngagement);
@@ -87,21 +87,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Score unscored tweets (incremental — only new ones)
-    const unscoredTweets = getUnscoredTweets(1000);
+    const unscoredTweets = await getUnscoredTweets(1000);
     if (unscoredTweets.length > 0) {
       console.log(`[Cron] Scoring ${unscoredTweets.length} unscored tweets...`);
       await scoreTweets(unscoredTweets);
     }
 
     // 4. Generate takes for scored tweets that don't have one (incremental)
-    const tweetsNeedingTakes = getTweetsWithoutTakes(500);
+    const tweetsNeedingTakes = await getTweetsWithoutTakes(500);
     if (tweetsNeedingTakes.length > 0) {
       console.log(`[Cron] Generating takes for ${tweetsNeedingTakes.length} tweets...`);
       await generateTakes(tweetsNeedingTakes);
     }
 
     // 5. Build clustering input from tweets with takes + non-tweet articles
-    const topTweets = getTopTweetsWithTakes(200);
+    const topTweets = await getTopTweetsWithTakes(200);
     const tweetSources = topTweets.map(t => ({
       url: t.url,
       author: (t.author || "").replace(/^@+/, ""),
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     // 7. Pre-compute bias + summary (cached for instant page loads)
     console.log("[Cron] Pre-computing bias classifications...");
-    const displayedTweets = getRecentTweets(30);
+    const displayedTweets = await getRecentTweets(30);
     const biasItems: { id: string; text: string }[] = [];
     analysis.clusters.forEach((c, i) => {
       biasItems.push({ id: `cluster-${i}`, text: `${c.headline}. ${c.subheadline}` });
@@ -184,7 +184,7 @@ Return valid JSON.`,
     // Overall summary
     console.log("[Cron] Generating overall summary...");
     try {
-      const allTweets = getAllTweetsForSummary();
+      const allTweets = await getAllTweetsForSummary();
       const claudeTweets = allTweets.filter(t => t.subject === "claude" || t.subject === "both");
       const openaiTweets = allTweets.filter(t => t.subject === "openai" || t.subject === "both");
       const tweetList = allTweets.slice(0, 300).map((t) =>
@@ -226,7 +226,7 @@ Return valid JSON.`,
       cachedSummary,
     };
 
-    completeCronRun(runId, {
+    await completeCronRun(runId, {
       posts_found: totalSearched,
       posts_new: newCount,
       summary: JSON.stringify(summaryData),
@@ -248,7 +248,7 @@ Return valid JSON.`,
     });
   } catch (error) {
     console.error(`[Cron] Run ${runId} failed:`, error);
-    failCronRun(runId);
+    await failCronRun(runId);
     return NextResponse.json(
       { error: "Cron run failed", details: String(error) },
       { status: 500 }

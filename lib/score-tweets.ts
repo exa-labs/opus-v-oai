@@ -130,7 +130,7 @@ Include every tweet index. Be discriminating.`;
           const finalScore = notable
             ? Math.min(10, score + notable.boost)
             : score;
-          updateImportanceScore(tweet.id, finalScore);
+          await updateImportanceScore(tweet.id, finalScore);
           scored++;
         }
       }
@@ -139,7 +139,7 @@ Include every tweet index. Be discriminating.`;
       console.error(`[Score] Batch ${batchNum} failed:`, err);
       for (const tweet of batch) {
         const notable = tweet.author ? getNotableInfo(tweet.author) : null;
-        updateImportanceScore(tweet.id, notable ? 5 + notable.boost : 5);
+        await updateImportanceScore(tweet.id, notable ? 5 + notable.boost : 5);
       }
     }
   }
@@ -218,7 +218,7 @@ Return JSON: {"takes": [{"index": 0, "take": "..."}, {"index": 1, "take": null},
       let generated = 0;
       for (const { index, take } of takes) {
         if (index >= 0 && index < batch.length && take) {
-          updatePostTake(batch[index].id, take);
+          await updatePostTake(batch[index].id, take);
           generated++;
         }
       }

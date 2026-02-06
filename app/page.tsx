@@ -17,13 +17,13 @@ interface SummaryData {
   cachedSummary?: string | null;
 }
 
-export default function Home() {
-  const latestRun = getLatestCompletedRun();
-  const tweets = getRecentTweets(30);
-  const totalSources = getTotalSourcesAnalyzed();
-  const headToHead = getHeadToHeadTweets(12);
-  const claudeUseCases = getUseCaseTweets("claude", 8);
-  const openaiUseCases = getUseCaseTweets("openai", 8);
+export default async function Home() {
+  const latestRun = await getLatestCompletedRun();
+  const tweets = await getRecentTweets(30);
+  const totalSources = await getTotalSourcesAnalyzed();
+  const headToHead = await getHeadToHeadTweets(12);
+  const claudeUseCases = await getUseCaseTweets("claude", 8);
+  const openaiUseCases = await getUseCaseTweets("openai", 8);
 
   let summaryData: SummaryData | null = null;
   if (latestRun?.summary) {
@@ -46,7 +46,7 @@ export default function Home() {
   const clusters = summaryData?.clusters || [];
   if (clusters.length > 0) {
     const allSourceUrls = clusters.flatMap(c => c.sources.map(s => s.url));
-    const imageMap = getImageUrlsForUrls(allSourceUrls);
+    const imageMap = await getImageUrlsForUrls(allSourceUrls);
     for (const cluster of clusters) {
       if (!cluster.imageUrl) {
         const sourceWithImage = cluster.sources.find(s => imageMap.has(s.url));

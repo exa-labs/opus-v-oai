@@ -113,7 +113,7 @@ export async function fetchEngagement(
     if (tweetId) {
       fetchable.push({ post, tweetId });
     } else {
-      markEngagementFailed(post.id);
+      await markEngagementFailed(post.id);
       skipped++;
     }
   }
@@ -136,7 +136,7 @@ export async function fetchEngagement(
       for (const { post, tweetId } of batch) {
         const data = results.get(tweetId);
         if (data) {
-          updatePostEngagement(post.id, {
+          await updatePostEngagement(post.id, {
             likes: data.likeCount || 0,
             retweets: data.retweetCount || 0,
             replies: data.replyCount || 0,
@@ -149,19 +149,19 @@ export async function fetchEngagement(
           if (media && media.length > 0) {
             const imageMedia = media.find(m => m.type === "photo" || m.media_url_https);
             if (imageMedia?.media_url_https) {
-              updatePostImageUrl(post.id, imageMedia.media_url_https);
+              await updatePostImageUrl(post.id, imageMedia.media_url_https);
             }
           }
           fetched++;
         } else {
-          markEngagementFailed(post.id);
+          await markEngagementFailed(post.id);
           skipped++;
         }
       }
     } catch (err) {
       console.error(`[Engagement] Batch ${batchNum} failed:`, err);
       for (const { post } of batch) {
-        markEngagementFailed(post.id);
+        await markEngagementFailed(post.id);
       }
       failed += batch.length;
     }
