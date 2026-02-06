@@ -2,10 +2,16 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { searchMultiple } from "@/lib/exa-search";
 
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPEN_ROUTER_KEY!,
-});
+let _client: OpenAI | null = null;
+function getClient(): OpenAI {
+  if (!_client) {
+    _client = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPEN_ROUTER_KEY!,
+    });
+  }
+  return _client;
+}
 
 const MODEL = "google/gemini-2.5-flash";
 
@@ -80,7 +86,7 @@ export async function POST(req: NextRequest) {
         ];
 
         // First LLM call — may produce tool calls
-        const firstStream = await client.chat.completions.create({
+        const firstStream = await getClient().chat.completions.create({
           model: MODEL,
           messages,
           tools: [searchTool],
@@ -212,7 +218,7 @@ export async function POST(req: NextRequest) {
         };
 
         // Final LLM call with search results
-        const finalStream = await client.chat.completions.create({
+        const finalStream = await getClient().chat.completions.create({
           model: MODEL,
           messages: [...messages, assistantMessage, ...toolMessages],
           stream: true,
