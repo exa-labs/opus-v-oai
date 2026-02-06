@@ -309,7 +309,7 @@ export async function getHeadToHeadTweets(limit: number = 12): Promise<Post[]> {
        OR LOWER(snippet) LIKE '%outperform%'
        OR LOWER(snippet) LIKE '%benchmark%'
      )
-     ORDER BY likes DESC
+     ORDER BY COALESCE(likes, 0) DESC
      LIMIT ${limit}` as Post[];
 }
 
@@ -341,11 +341,11 @@ export async function getUseCaseTweets(subject: 'claude' | 'openai', limit: numb
        'cursor_ai', 'code', 'github', 'googledeepmind', 'googleai',
        'supabase', 'vibecodeapp', 'amanrsanger'
      )
-     ORDER BY likes DESC
+     ORDER BY COALESCE(likes, 0) DESC
      LIMIT ${limit}` as Post[];
 }
 
-// ─── Engagement ───
+// ─── Engagement───
 
 export async function getTweetsWithoutEngagement(limit: number = 500): Promise<Post[]> {
   await ensureSchema();
