@@ -39,7 +39,7 @@ export async function GET() {
         },
         {
           role: "user",
-          content: `We've analyzed ${tweets.length} tweets about Claude Opus 4.6 / Anthropic (${claudeTweets.length} mentions) and OpenAI Codex 5.3 (${openaiTweets.length} mentions) from the past 24 hours.
+          content: `We've analyzed ${tweets.length} tweets about Claude / Anthropic (${claudeTweets.length} mentions) and OpenAI (${openaiTweets.length} mentions) from the past 24 hours.
 
 Here are the top ${Math.min(300, tweets.length)} tweets by importance:
 

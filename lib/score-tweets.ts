@@ -47,14 +47,14 @@ export async function scoreTweets(tweets: Post[]): Promise<void> {
       })
       .join("\n\n");
 
-    const prompt = `You are curating a feed for senior software engineers tracking the Claude Opus 4.6 vs OpenAI Codex 5.3 releases. We care specifically about these versions — not older models unless they're direct comparisons.
+    const prompt = `You are curating a feed for senior software engineers tracking the Claude vs OpenAI rivalry — including Claude (Opus, Sonnet, Haiku, Claude Code) and OpenAI (GPT, Codex, ChatGPT, o-series models). Any recent Claude or OpenAI model, product, or developer tool is on-topic.
 
 Score each tweet 1-10 on how VALUABLE it would be in that feed. Think: "Would a principal engineer at a top tech company find this worth reading?"
 
 SCORING CRITERIA:
 
 9-10 ESSENTIAL (would lead a newsletter):
-- Specific benchmark results with numbers ("Opus 4.6 scores 72.1% on SWE-bench Full")
+- Specific benchmark results with numbers ("Claude scores 72.1% on SWE-bench Full")
 - First-hand experience from a recognized engineer ("I spent 3 hours with Codex and here's what I found...")
 - Breaking news or feature announcements from insiders
 - Viral-quality hot take with real substance and specifics
@@ -109,7 +109,7 @@ Include every tweet index. Be discriminating.`;
         messages: [
           {
             role: "system",
-            content: "You are a ruthless content curator for a senior engineering audience. Most tweets are noise. You score 1-10 with a harsh curve: median should be around 4-5. Only genuinely substantive, specific, informative content gets 7+. Return valid JSON.",
+            content: "You are a ruthless content curator for a senior engineering audience tracking Claude vs OpenAI. Most tweets are noise. You score 1-10 with a harsh curve: median should be around 4-5. Only genuinely substantive, specific, informative content gets 7+. Return valid JSON.",
           },
           { role: "user", content: prompt },
         ],
@@ -181,7 +181,7 @@ export async function generateTakes(tweets: Post[]): Promise<void> {
         messages: [
           {
             role: "system",
-            content: `You distill tweets into single-sentence "takes" for a clustering pipeline. Each take should be ~10-20 words capturing the KEY claim, opinion, or finding. Format: "@handle: [their specific claim]". Focus specifically on Claude Opus 4.6 and OpenAI Codex 5.3 — flag if a tweet is about older models or unrelated. Return valid JSON.`,
+            content: `You distill tweets into single-sentence "takes" for a clustering pipeline. Each take should be ~10-20 words capturing the KEY claim, opinion, or finding. Format: "@handle: [their specific claim]". Focus on Claude (any version, Claude Code, Anthropic) and OpenAI (GPT, Codex, ChatGPT, o-series). Return valid JSON.`,
           },
           {
             role: "user",
@@ -189,15 +189,15 @@ export async function generateTakes(tweets: Post[]): Promise<void> {
 
 Good takes:
 - "@antirez: Claude Code's multi-agent approach hurts overall performance"
-- "@VictorTaelin: Codex 5.3 is faster and more accurate but Opus 4.6 is more compelling to use"
-- "@bytes032: Codex outperformed Opus in smart contract security on TerminalBench"
-- "@scaling01: Opus 4.6 achieves 427x speedup in kernel optimization benchmarks"
+- "@VictorTaelin: Codex is faster and more accurate but Claude is more compelling to use"
+- "@bytes032: Codex outperformed Claude in smart contract security on TerminalBench"
+- "@scaling01: Claude achieves 427x speedup in kernel optimization benchmarks"
 
 Bad takes (too vague):
 - "@someone: Impressive AI model"
 - "@someone: Good comparison of the models"
 
-If a tweet is about older models (not Opus 4.6 or Codex 5.3) or is off-topic, set take to null.
+If a tweet is completely unrelated to Claude/Anthropic or OpenAI, set take to null. Tweets about ANY Claude or OpenAI model/product ARE on-topic.
 
 Tweets:
 

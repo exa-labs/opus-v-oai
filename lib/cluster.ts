@@ -80,9 +80,9 @@ async function clusterFromTakes(
 
   const targetClusters = Math.max(10, Math.min(15, Math.floor(allSources.length / 6)));
 
-  const prompt = `You have ${allSources.length} curated sources (indices 0 through ${allSources.length - 1}) about Claude Opus 4.6 and OpenAI Codex 5.3 from the last 24 hours. Cluster ALL of them into ${targetClusters} distinct headlines.
+  const prompt = `You have ${allSources.length} curated sources (indices 0 through ${allSources.length - 1}) about Claude and OpenAI from the last 24 hours. Cluster ALL of them into ${targetClusters} distinct headlines.
 
-We care SPECIFICALLY about Opus 4.6 and Codex 5.3 — not older versions unless they're direct comparisons against the new ones.
+We care about Claude (Opus, Sonnet, Haiku, Claude Code, Anthropic) and OpenAI (GPT, Codex, ChatGPT, o-series) — any recent models, products, or developer tools.
 
 ASSIGNMENT RULE (MOST IMPORTANT): You MUST assign ALL ${allSources.length} sources. Every index from 0 to ${allSources.length - 1} must appear in exactly one cluster's source_indices array. I will verify programmatically.
 
@@ -94,7 +94,7 @@ For each cluster, output:
 PRIORITIZE these angles:
 1. CONTRARIAN / SURPRISING — unexpected results, disagreements with consensus
 2. FIRST-HAND EXPERIENCE — someone actually used the tool and reports results
-3. HEAD-TO-HEAD — concrete Opus 4.6 vs Codex 5.3 comparisons on specific tasks
+3. HEAD-TO-HEAD — concrete Claude vs OpenAI comparisons on specific tasks
 4. NOTABLE OPINIONS — well-known engineers taking clear stances
 5. CONCRETE CAPABILITIES — specific new things the models can do, with evidence
 
@@ -125,7 +125,7 @@ Return JSON: {"clusters": [{"headline": "...", "subheadline": "...", "source_ind
       messages: [
         {
           role: "system",
-          content: `You are a sharp tech editor writing for Hacker News readers about Opus 4.6 and Codex 5.3 specifically. Style rules:
+          content: `You are a sharp tech editor writing for Hacker News readers about Claude vs OpenAI. Style rules:
 - NEVER use: "game-changer", "turning point", "landscape", "empowers", "showcases", "demonstrates", "highlights", "positions", "marks a significant", "fierce competition", "enhancing capabilities"
 - Write like a developer talking to developers, not a press release
 - Lead with the SPECIFIC thing that happened
@@ -199,7 +199,7 @@ Return valid JSON.`,
   } catch (err) {
     console.error("[Cluster] Clustering failed:", err);
     return [{
-      headline: "Today's Coverage of Opus 4.6 and Codex 5.3",
+      headline: "Today's Coverage of Claude vs OpenAI",
       subheadline: "All sources from the latest scan.",
       sources: allSources.slice(0, 50),
     }];
