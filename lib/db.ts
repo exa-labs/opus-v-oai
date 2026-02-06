@@ -231,9 +231,9 @@ export async function getNewPostsCount(runId: string): Promise<number> {
 export async function getRecentTweets(limit: number = 25): Promise<Post[]> {
   await ensureSchema();
   return await sql`SELECT * FROM posts WHERE source_type = 'twitter' AND snippet IS NOT NULL AND snippet != ''
-     AND (views >= 5000 OR likes >= 200)
+     AND (views IS NULL OR views >= 5000 OR likes >= 200)
      AND LOWER(author) NOT IN ('claudeai', 'anthropicai', 'openai', 'openaidevs', 'chatgpt', 'openaieng', 'cursor_ai', 'code', 'github', 'googledeepmind', 'googleai')
-     ORDER BY likes DESC, importance_score DESC LIMIT ${limit}` as Post[];
+     ORDER BY COALESCE(likes, 0) DESC, importance_score DESC LIMIT ${limit}` as Post[];
 }
 
 export async function getUnscoredTweets(limit: number = 200): Promise<Post[]> {
@@ -258,7 +258,7 @@ export async function updatePostTake(id: string, take: string) {
 
 export async function getTopTweetsWithTakes(limit: number = 200): Promise<(Post & { take: string })[]> {
   await ensureSchema();
-  return await sql`SELECT * FROM posts WHERE source_type = 'twitter' AND take IS NOT NULL AND (views >= 5000 OR likes >= 200) ORDER BY likes DESC, importance_score DESC LIMIT ${limit}` as (Post & { take: string })[];
+  return await sql`SELECT * FROM posts WHERE source_type = 'twitter' AND take IS NOT NULL AND (views IS NULL OR views >= 5000 OR likes >= 200) ORDER BY COALESCE(likes, 0) DESC, importance_score DESC LIMIT ${limit}` as (Post & { take: string })[];
 }
 
 export async function getAllTweetsForSummary(): Promise<{ author: string; snippet: string; subject: string }[]> {
@@ -296,7 +296,7 @@ export async function getHeadToHeadTweets(limit: number = 12): Promise<Post[]> {
      WHERE source_type = 'twitter'
      AND snippet IS NOT NULL AND snippet != ''
      AND subject = 'both'
-     AND (likes >= 40 OR views >= 3000)
+     AND (likes IS NULL OR likes >= 40 OR views IS NULL OR views >= 3000)
      AND (
        LOWER(snippet) LIKE '%vs%'
        OR LOWER(snippet) LIKE '%compar%'
@@ -309,7 +309,7 @@ export async function getHeadToHeadTweets(limit: number = 12): Promise<Post[]> {
        OR LOWER(snippet) LIKE '%outperform%'
        OR LOWER(snippet) LIKE '%benchmark%'
      )
-     ORDER BY likes DESC
+     ORDER BY COALESCE(likes, 0) DESC
      LIMIT ${limit}` as Post[];
 }
 
@@ -319,7 +319,7 @@ export async function getUseCaseTweets(subject: 'claude' | 'openai', limit: numb
      WHERE source_type = 'twitter'
      AND snippet IS NOT NULL AND snippet != ''
      AND subject = ${subject}
-     AND (likes >= 50 OR views >= 5000)
+     AND (likes IS NULL OR likes >= 50 OR views IS NULL OR views >= 5000)
      AND (
        LOWER(snippet) LIKE '%built%'
        OR LOWER(snippet) LIKE '%shipped%'
@@ -341,11 +341,11 @@ export async function getUseCaseTweets(subject: 'claude' | 'openai', limit: numb
        'cursor_ai', 'code', 'github', 'googledeepmind', 'googleai',
        'supabase', 'vibecodeapp', 'amanrsanger'
      )
-     ORDER BY likes DESC
+     ORDER BY COALESCE(likes, 0) DESC
      LIMIT ${limit}` as Post[];
 }
 
-// ─── Engagement ───
+// ─── Engagement───
 
 export async function getTweetsWithoutEngagement(limit: number = 500): Promise<Post[]> {
   await ensureSchema();
